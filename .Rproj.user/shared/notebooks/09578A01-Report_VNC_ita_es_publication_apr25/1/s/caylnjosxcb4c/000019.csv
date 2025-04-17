@@ -1,5 +1,0 @@
-"0",""
-"0","table_es %>% "
-"0","  kbl(booktabs = TRUE, col.names = c(""% Causal uses - Spanish"", paste0(""70 years periods"", footnote_marker_symbol(1))), escape = F, caption = ""Input table for the VNC"") %>% "
-"0","  kable_styling()  %>% "
-"0","  footnote(symbol = ""Periods are indicated with the central years in the 70 years span, i.e. 1175 stands for the period between 1140 and 1210"")"

@@ -1,7 +1,0 @@
-"0","ggplot(romall, aes(x=year, fill=semantics)) +"
-"0","  geom_histogram(alpha = 0.5, position=""stack"") +"
-"0","  facet_wrap(~stringr::str_to_title(language))+"
-"0","  scale_fill_manual(labels=c(""Causal"", ""Noncausal""), values= (c(""#fc8961"", ""#b73779"")))+ #wes_palette(n=2, name=""GrandBudapest1""))+"
-"0","  theme_minimal()"
-"1","[38;5;252m`stat_bin()` using `bins = 30`. Pick better value with `binwidth`.[39m
-"
