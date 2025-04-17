@@ -1,0 +1,3 @@
+"0","# Step 1"
+"0","esp <- filter(romall, language==""spanish"")"
+"0","ita <- filter(romall, language==""italian"")"

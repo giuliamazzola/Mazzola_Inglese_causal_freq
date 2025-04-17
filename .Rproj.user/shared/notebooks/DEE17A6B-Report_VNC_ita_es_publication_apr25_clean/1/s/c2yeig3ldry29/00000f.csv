@@ -1,0 +1,13 @@
+"0",""
+"0","ita_agg <- ita_nc %>%"
+"0","  group_by(lemma, period) %>%"
+"0","  summarise("
+"0","    anticausative_count = sum(coding == ""antic""),"
+"0","    total_count = n(),"
+"0","    proportion_anticausative = anticausative_count / total_count,"
+"0","    causalness_degree = first(causalness_degree),"
+"0","      ) %>%"
+"0","  ungroup()"
+"1","[38;5;252m`summarise()` has grouped output by 'lemma'. You can override using the
+`.groups` argument.[39m
+"

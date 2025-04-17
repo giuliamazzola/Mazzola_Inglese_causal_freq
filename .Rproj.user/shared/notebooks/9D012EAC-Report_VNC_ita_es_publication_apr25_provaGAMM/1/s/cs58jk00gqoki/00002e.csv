@@ -1,0 +1,73 @@
+"0",""
+"0","#remove s(period, by = language, k = 5, bs = ""cs"", m= 1),   "
+"0",""
+"0",""
+"0","model2 <- gam("
+"0","  proportion_anticausative ~ "
+"0","    language + #you must include interaction terms as main effects too!"
+"0","    s(causalness_lagged, k=20)+"
+"0","    s(period, k=5)+"
+"0","    s(causalness_lagged, by = language, k = 20, bs = ""cs"", m = 1),"
+"0","  family = betar(link = ""logit""),                 "
+"0","  data = join"
+"0",")"
+"0",""
+"0","anova.gam(model1, model2, test = ""Chisq"") "
+"1","Analysis of Deviance Table
+"
+"1","
+"
+"1","Model 1: proportion_anticausative ~ language + s(causalness_lagged, k = 20) + 
+    s(period, k = 5) + s(causalness_lagged, by = language, k = 20, 
+    bs = ""cs"", m = 1) + s(period, by = language, k = 5, bs = ""cs"", 
+    m = 1)
+Model 2: proportion_anticausative ~ language + s(causalness_lagged, k = 20) + 
+    s(period, k = 5) + s(causalness_lagged, by = language, k = 20, 
+    bs = ""cs"", m = 1)"
+"1","
+"
+"1"," "
+"1"," Resid. Df"
+"1"," Resid. Dev"
+"1","       Df"
+"1"," Deviance"
+"1"," Pr(>Chi)"
+"1","  "
+"1","
+1"
+"1","    93.449"
+"1","    -1666.3"
+"1","         "
+"1","         "
+"1","         "
+"1","  "
+"1","
+2"
+"1","    93.435"
+"1","    -1666.3"
+"1"," 0.014374"
+"1"," 0.010322"
+"1","  0.03322"
+"1"," *"
+"1","
+"
+"1","---
+Signif. codes:  "
+"1",""
+"1","0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1"
+"1","
+"
+"0","compareML(model1, model2)"
+"1","model1: proportion_anticausative ~ language + s(causalness_lagged, k = 20) + 
+    s(period, k = 5) + s(causalness_lagged, by = language, k = 20, 
+    bs = ""cs"", m = 1) + s(period, by = language, k = 5, bs = ""cs"", 
+    m = 1)
+
+model2: proportion_anticausative ~ language + s(causalness_lagged, k = 20) + 
+    s(period, k = 5) + s(causalness_lagged, by = language, k = 20, 
+    bs = ""cs"", m = 1)
+"
+"1","
+Model model2 preferred: lower REML score (0.000), and lower df (2.000).
+-----
+"

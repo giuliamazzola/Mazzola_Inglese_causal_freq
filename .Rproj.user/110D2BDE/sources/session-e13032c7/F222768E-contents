@@ -1,0 +1,39 @@
+library(readxl)
+library(tidyverse)
+romall <- read_excel("romance_all_feb24_vnc_verb_bruciare_clean.xlsx")
+ita<-read_excel("VNC/ita_feb24_vnc_verb.xlsx")
+es<-read_excel("VNC/esp_feb24_vnc_verb.xlsx")
+
+romall <- romall %>% 
+                  rename(vnc_70_all=vnc704, vnc_50_all=vnc504, caus_use_all=caus_use) %>%
+                  select(-c(vnc50, vnc70))
+
+
+ita_short <- ita %>%
+  select(id, ita_vnc70, caus_use_ita)
+
+romall_ita <- left_join(romall, ita_short, by = "id")
+
+es_short <- es %>%
+  select(id, es_vnc70, caus_use_es)
+
+
+romall_ita_es<-left_join(romall_ita, es_short, by = "id")
+
+which(is.na(romall_ita_es$caus_use_ita)) %>% length()
+nrow(es_short)
+
+which(is.na(romall_ita_es$caus_use_es)) %>% length()
+nrow(ita_short)
+
+romall_ita_es<-romall_ita_es %>%
+  mutate(caus_use_joined = coalesce(caus_use_es, caus_use_ita))
+
+which(is.na(romall_ita_es$caus_use_joined))
+
+
+
+library(openxlsx)
+write.xlsx(romall_ita_es, "VNC/romance_all_bruciare_clean_new_vnc.xlsx")
+
+

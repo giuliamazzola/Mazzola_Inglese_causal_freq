@@ -1,0 +1,8 @@
+"0",""
+"0",""
+"0","setcolorder (table_es, c(""input"", ""year""))"
+"0","write.table(table_es, file = ""esp_vnc_caus_70y_p.txt"", sep = ""\t"", quote = FALSE, row.names = F)"
+"0",""
+"0","setcolorder (table_ita, c(""input"", ""year""))"
+"0","write.table(table_ita, file = ""ita_vnc_caus_70y_p.txt"", sep = ""\t"", quote = FALSE, row.names = F)"
+"0",""

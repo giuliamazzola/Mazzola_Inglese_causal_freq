@@ -1,0 +1,7 @@
+"0","es_agg <- es_agg %>%"
+"0","  arrange(lemma, period) %>%"
+"0","  group_by(lemma) %>%"
+"0","  mutate(causalness_lagged = lag(causalness_degree)) %>%"
+"0","  ungroup() %>%"
+"0","  # Remove rows without previous causalness_degree (period 1)"
+"0","  filter(!is.na(causalness_lagged)) "
