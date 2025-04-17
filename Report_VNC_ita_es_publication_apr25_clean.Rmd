@@ -496,7 +496,7 @@ join$period <- as.numeric(join$period_cat)
 Hereby a summary of the dataset with only unique combinations of lemma and period and their anticausative count, proportion, synchronic and lagged causalness degree:
 
 ```{r}
-# Summarize the dataset by language, lemma, and period
+# Summarize the dataset 
 
 summary_table <- join %>%
   group_by(language, lemma, period) %>%
