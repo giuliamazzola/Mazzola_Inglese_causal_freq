@@ -70,7 +70,7 @@ Our dataset `romall` includes causal and noncausal observations. The subset `nc`
 If we zoom in onto the panchronic percentage of noncausal usage of the verbs and plot them against the spontaneity scale (or causative prominence) proposed by Haspelmath (1993), we can observe that Italian and Spanish substantially behaves like other languages in the sample studied by Haspelmath et al. (2014). Although the data in the plot below displays the expected trend, the results may be problematic in that the percentage of noncausal usages has been calculated over the entire Italian and Spanish datasets. The problem is that, since the data comes from diachronic corpora, one cannot be sure of the accuracy of this measurement, as the causalness degree may in fact be variable over time.
 
 ```{r}
-##Script for Figure 2
+## Script for Figure 2
 
 result_noncaus_meaning <- romall %>%
   group_by(language, meaning) %>%
@@ -345,8 +345,6 @@ And finally rejoin the individual languages new information (`period70, vnc and 
 
 ```{r}
 
-library(dplyr)
-
 # 1. Join caus_use_ita to ita by vnc and lemma
 ita <- ita %>%
   left_join(caus_use_ita, by = c("ita_vnc70_apr25" = "ita_vnc70_apr25", "lemma" = "lemma"))
@@ -510,7 +508,6 @@ plot_ita_4 <- ggplot(merged_data_ita_noncaus_4, aes(x = caus_degree, y = prop_an
   theme_minimal() +
   theme(text = element_text(size = 14))
 
-library(gridExtra)
 grid.arrange(plot_ita_1, plot_ita_2, plot_ita_3, plot_ita_4, nrow = 2, ncol = 2,  top = "Italian Correlation Plot")
 
 ## Figure 7
