@@ -1,38 +1,52 @@
 ---
 title: "Causalness, frequency, diachrony and the causal-noncausal alternation in Italian and Spanish"
-author: "Giulia Mazzola (Newcastle University) and Guglielmo Inglese (Università di Torino)"
-date: "April 2025"
-output:
-  html_document: default
-  pdf_document: default
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    toc-location: left
 ---
 
-```{r setup, include=FALSE, warning=FALSE, message = F}
+```{r}
+#| label: setup
+#| include: false
+#| warning: false
+#| message: false
 
-knitr::opts_chunk$set(include=TRUE, warning=FALSE, message = F)
+knitr::opts_chunk$set(
+  include = TRUE,
+  warning = FALSE,
+  message = FALSE
+)
 
 ```
 
 
 ```{r}
 
-# List of required packages
+#| label: setup-packages
+#| echo: false
+#| message: false
+#| warning: false
+#| results: "hide"
+
 packages <- c(
   "tidyverse", "knitr", "data.table", "DT", "here", "kableExtra",
   "lme4", "openxlsx", "readxl", "wesanderson", "stringr",
-  "itsadug", "mgcv", "report", "gratia"
+  "itsadug", "mgcv", "report", "gratia", "ggrepel", "gridExtra"
 )
 
-# Install any packages not already installed
 installed_packages <- rownames(installed.packages())
 to_install <- setdiff(packages, installed_packages)
 
 if (length(to_install) > 0) {
-  install.packages(to_install)
+  suppressMessages(install.packages(to_install))
 }
 
-# Load the packages
-lapply(packages, library, character.only = TRUE)
+
+invisible(lapply(packages, function(pkg) {
+  suppressMessages(suppressWarnings(library(pkg, character.only = TRUE)))
+}))
 
 #Set working directory where this Rmd file lives
 setwd(here::here())
@@ -46,6 +60,43 @@ setwd(here::here())
 
 
 # Part I: Calculating the causalness degree over time
+
+Cross-linguistic work on the causal-noncausal alternation has shown that there exists a strong correlation between the frequency of use of a given verb in causal vs. noncausal contexts and its preferred coding pattern for the alternation, with verbs typically occurring in causal contexts preferably selecting the anticausative pattern (Haspelmath et al. 2014). These findings rest upon the assumption that the correlation between frequency and coding is diachronic in nature, but this has so far not been tested on historical data.
+
+Data for this study comes from diachronic corpora of Italian (MIDIA, D’Achille & Iacobini 2022) and Spanish (CDH, Real Academia Española 2013), from which the tokens of the 20 verb meanings used in Haspelmath et al. (2014) have been extracted and richly annotated. Each token has been classified according to whether it occurs in a causal or a noncausal context (following Haspelmath et al. 2014: 603, we considered passive, impersonal, reflexive, and reciprocal usages as causal) and based on the type of marking, that is, zero marking, marked anticausative (mainly with the reflexive marker *si/se*), or marked causative (regardless of the type of auxiliary verb, e.g., *fare/hacer* ‘make’, *lasciare/dejar* ‘let’, etc.).
+
+Our dataset `romall` includes causal and noncausal observations. The subset `nc` only contains noncausal observations, and only includes "the variable contexts", only verb lemma with alternation between zero and anticausative marking, since from a variationist point of view is important to only look at contexts where the variation actually occurs (see Inglese et al. forthc.).
+
+If we zoom in onto the panchronic percentage of noncausal usage of the verbs and plot them against the spontaneity scale (or causative prominence) proposed by Haspelmath (1993), we can observe that Italian and Spanish substantially behaves like other languages in the sample studied by Haspelmath et al. (2014). Although the data in the plot below displays the expected trend, the results may be problematic in that the percentage of noncausal usages has been calculated over the entire Italian and Spanish datasets. The problem is that, since the data comes from diachronic corpora, one cannot be sure of the accuracy of this measurement, as the causalness degree may in fact be variable over time.
+
+```{r}
+##Script for Figure 2
+
+result_noncaus_meaning <- romall %>%
+  group_by(language, meaning) %>%
+  summarise(noncaus = sum(semantics == 'noncaus') * 100 / n())
+
+plot_noncaus_tot <- ggplot(result_noncaus_meaning, aes(x = meaning, y = noncaus, color = language, group = language)) +
+  geom_smooth(aes(y = noncaus, color = language), method = 'loess', se = FALSE) +
+  labs(y = "% noncausal usage", x = "Causative prominence") +
+  scale_color_manual(
+    values = c("italian" = "gray70", "spanish" = "gray20"),
+    labels = c("italian" = "Italian", "spanish" = "Spanish")) +
+  coord_cartesian(ylim = c(1, 100)) +
+  theme_minimal() +
+  theme(
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.background = element_rect(fill = "white", color = NA),
+    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)  # Rotate x-axis labels
+  )
+
+custom_order <- c("split", "close", "break", "open", "gather", "connect", "rock", "improve", "rise", "fill", "burn", "turn", "stop", "melt", "sink", "go out", "wake up", "dry", "freeze", "boil")
+plot_noncaus_tot <- plot_noncaus_tot + scale_x_discrete(limits = custom_order)
+print(plot_noncaus_tot)
+
+```
+
 
 ## Overall purpose
 
@@ -61,8 +112,7 @@ The analyst needs to input the proportions of a given variant (in our case, caus
 ggplot(romall, aes(x=year, fill=semantics)) +
   geom_histogram(alpha = 0.5, position="stack") +
   facet_wrap(~stringr::str_to_title(language))+
-  scale_fill_manual(labels=c("Causal", "Noncausal"), values= (c("#fc8961", "#b73779")))+ #wes_palette(n=2, name="GrandBudapest1"))+
-  theme_minimal()
+  scale_fill_manual(labels=c("Causal", "Noncausal"), values= (c("#fc8961", "#b73779")))+   theme_minimal()
 ```
 
 ### Establish the 70-years periodisation
@@ -202,14 +252,10 @@ Running the previous script will generate two graphs in separate windows: a dend
 
 The dendogram specifies how periods are clustered (the periods that are the most similar are amalgamated first). The analyst should asses how many development stages are considered relevant to the diachronic study. The screeplot produced by the VNC function allows the linguist to decide by comparing the distances between successive mergers (measured with standard deviations). Essentially, one should observe the slope from left to right, and take the number of clusters with the largest differences, until the slope is leveled off (i.e., until the difference between clusters is marginal). In this case 4 or 6 clusters seems adequate. Given that we want to minimise data sparsity, we make the most parsimonious choice and select the first 4 clusters.
 
-![Dendogram Italian](ita_dendro_apr25.jpeg)
+![Dendogram and Scree plot Italian](Ita_VNC_plots.jpg)
 
-![Screeplot Italian](ita_scree_apr25.jpeg)
 
-![Dendogram Spanish](es_dendro_apr25.jpeg)
-
-![Screeplot Spanish](es_scree_apr25.jpeg)
-
+![Dendogram and Screeplot Spanish](Es_VNC_plots.jpg)
 From the interpretation of the VNC results we end up with 4 significant periods for the development of the causal vs. non causal alternation in Spanish, dividing our dataset in the following periods: 1140-1209,1210-1279, 1280-1559, 1560-2001. Data are distributed across periods as summarised below. In Spanish causal uses are consistently higher than noncausal ones, but always below 60% except in the second period where they reach 73%.
 
 ```{r}
@@ -346,6 +392,323 @@ openxlsx::write.xlsx(romall, "romall_new_VNC.xlsx")
 openxlsx::write.xlsx(nc, "noncaus_new_VNC.xlsx")
 
 
+```
+
+### Diachronic analysis of the noncausal usage and causalness degree correlation
+
+After calculating the diachronic causalness degree, we follow the procedure outlined in Heidinger (2015). For each verb in the two languages, we measure its correlation with the percentage of anticausative marking, iterating the count separately for each of the four periods. The results are shown in Figure 6 and Figure 7:
+
+```{r}
+##Calculate causalness degree
+
+caus_degree_ita <- romall %>%
+  filter (language == 'italian') %>%
+  mutate(caus_degree = causalness_degree_apr25 * 100) %>% 
+  select(meaning, vnc_period_apr25, caus_degree) %>% 
+  group_by(meaning, vnc_period_apr25, caus_degree) %>%  
+  mutate(caus_degree = round(caus_degree, 2))
+  
+caus_degree_es <- romall %>%
+  filter (language == 'spanish') %>%
+  mutate(caus_degree = causalness_degree_apr25 * 100) %>% 
+  select(meaning, vnc_period_apr25, caus_degree) %>% 
+  group_by(meaning, vnc_period_apr25, caus_degree) %>% 
+  mutate(caus_degree = round(caus_degree, 2))
+
+
+##Calculate percentage of anticausative marking
+
+coding_percentages_ita <-  romall %>%
+  group_by(
+    meaning, semantics, coding, vnc_period_apr25) %>%
+  filter (
+    language == 'italian') %>%
+  summarise(count = n()) %>%
+  spread(
+    coding, count, fill = 0) %>%
+  mutate(
+    caus_degree_vs_zero = caus * 100 / (caus + zero),
+    prop_antic_vs_zero = antic * 100 / (antic + zero)) %>% 
+  mutate(
+    caus_degree_vs_zero = round(caus_degree_vs_zero, 2),
+    prop_antic_vs_zero = round(prop_antic_vs_zero, 2))
+
+coding_percentages_es <- romall %>%
+  group_by(meaning, semantics, coding, vnc_period_apr25) %>%
+  filter (language == 'spanish') %>%
+  summarise(count = n()) %>%
+  spread(coding, count, fill = 0) %>%
+  mutate(caus_degree_vs_zero = caus * 100 / (caus + zero),
+         prop_antic_vs_zero = antic * 100 / (antic + zero))%>% 
+  mutate(
+    caus_degree_vs_zero = round(caus_degree_vs_zero, 2),
+    prop_antic_vs_zero = round(prop_antic_vs_zero, 2))
+
+## Scatter Plot by period
+
+merged_data_ita <- merge(caus_degree_ita, coding_percentages_ita, by = c("meaning", "vnc_period_apr25"))
+
+merged_data_ita_noncaus <- merged_data_ita %>%
+  filter(semantics == 'noncaus')
+
+merged_data_ita_noncaus_1 <- merged_data_ita_noncaus %>%
+  filter(vnc_period_apr25 == '1200-1409')
+
+merged_data_ita_noncaus_2 <- merged_data_ita_noncaus %>%
+  filter(vnc_period_apr25 == '1410-1549')
+
+merged_data_ita_noncaus_3 <- merged_data_ita_noncaus %>%
+  filter(vnc_period_apr25 == '1550-1619')
+
+merged_data_ita_noncaus_4 <- merged_data_ita_noncaus %>%
+  filter(vnc_period_apr25 == '1620-1968')
+
+merged_data_es <- merge(caus_degree_es, coding_percentages_es, by = c("meaning", "vnc_period_apr25"))
+
+merged_data_es_noncaus <- merged_data_es %>%
+  filter(semantics == 'noncaus')
+
+merged_data_es_noncaus_1 <- merged_data_es_noncaus %>%
+  filter(vnc_period_apr25 == '1140-1349')
+
+merged_data_es_noncaus_2 <- merged_data_es_noncaus %>%
+  filter(vnc_period_apr25 == '1350-1419')
+
+merged_data_es_noncaus_3 <- merged_data_es_noncaus %>%
+  filter(vnc_period_apr25 == '1420-1699')
+
+merged_data_es_noncaus_4 <- merged_data_es_noncaus %>%
+  filter(vnc_period_apr25 == '1700-2001')
+
+## Figure 6
+
+plot_ita_1 <- ggplot(merged_data_ita_noncaus_1, aes(x = caus_degree, y = prop_antic_vs_zero, label = meaning)) +
+  geom_point() +
+  labs(x = "Causalness",
+       y = "%anticausative", title = "1200-1409") +
+  theme_minimal() +
+  theme(text = element_text(size = 14))
+
+plot_ita_2 <- ggplot(merged_data_ita_noncaus_2, aes(x = caus_degree, y = prop_antic_vs_zero, label = meaning)) +
+  geom_point() +
+  labs(x = "Causalness",
+       y = "%anticausative", title = "1410-1549") +
+  theme_minimal() +
+  theme(text = element_text(size = 14))
+
+plot_ita_3 <- ggplot(merged_data_ita_noncaus_3, aes(x = caus_degree, y = prop_antic_vs_zero, label = meaning)) +
+  geom_point() +
+  labs(x = "Causalness",
+       y = "%anticausative", title = "1420-1699") +
+  theme_minimal() +
+  theme(text = element_text(size = 14))
+
+plot_ita_4 <- ggplot(merged_data_ita_noncaus_4, aes(x = caus_degree, y = prop_antic_vs_zero, label = meaning)) +
+  geom_point() +
+  labs(x = "Causalness",
+       y = "%anticausative", title = "1700-2001") +
+  theme_minimal() +
+  theme(text = element_text(size = 14))
+
+library(gridExtra)
+grid.arrange(plot_ita_1, plot_ita_2, plot_ita_3, plot_ita_4, nrow = 2, ncol = 2,  top = "Italian Correlation Plot")
+
+## Figure 7
+plot_es_1 <- ggplot(merged_data_es_noncaus_1, aes(x = caus_degree, y = prop_antic_vs_zero, label = meaning)) +
+  geom_point() +
+  labs(x = "Causalness",
+       y = "%anticausative", title = "1140-1349") +
+  theme_minimal() +
+  theme(text = element_text(size = 14))
+
+plot_es_2 <- ggplot(merged_data_es_noncaus_2, aes(x = caus_degree, y = prop_antic_vs_zero, label = meaning)) +
+  geom_point() +
+  labs(x = "Causalness",
+       y = "%anticausative", title = "1350-1419") +
+  theme_minimal() +
+  theme(text = element_text(size = 14))
+
+plot_es_3 <- ggplot(merged_data_es_noncaus_3, aes(x = caus_degree, y = prop_antic_vs_zero, label = meaning)) +
+  geom_point() +
+  labs(x = "Causalness",
+       y = "%anticausative", title = "1420-1699") +
+  theme_minimal() +
+  theme(text = element_text(size = 14))
+
+plot_es_4 <- ggplot(merged_data_es_noncaus_4, aes(x = caus_degree, y = prop_antic_vs_zero, label = meaning)) +
+  geom_point() +
+  labs(x = "Causalness",
+       y = "%anticausative", title = "1700-2001") +
+  theme_minimal() +
+  theme(text = element_text(size = 14))
+
+grid.arrange(plot_es_1, plot_es_2, plot_es_3, plot_es_4, nrow = 2, ncol = 2,  top = "Spanish Correlation Plot") 
+
+```
+
+
+The corresponding correlation measures (Spearman Correlation Coefficient, SCC), alongside with p-values and the number of tokens analyzed for each period are given in the tables below:
+
+```{r}
+## Function to format the p-values
+format_pval <- function(p) {
+  case_when(
+    p < 0.001 ~ "< 0.001***",
+    p < 0.01  ~ "< 0.01**",
+    p < 0.05  ~ "< 0.05*",
+    TRUE      ~ paste0("= ", round(p, 3))
+  )
+}
+
+# Italian
+
+## Individual periods datasets for Italian
+datasets <- list(
+  Period1 = merged_data_ita_noncaus_1,
+  Period2 = merged_data_ita_noncaus_2,
+  Period3 = merged_data_ita_noncaus_3,
+  Period4 = merged_data_ita_noncaus_4
+)
+
+## Make a dataframe with the Spearman correlation and p-values
+cor_table_ita <- purrr::imap_dfr(datasets, function(df, period) {
+  test_result <- cor.test(df$caus_degree, df$prop_antic_vs_zero, method = "spearman", exact = FALSE)
+  
+  tibble(
+    Period = period,
+    Spearman_Correlation = round(test_result$estimate, 3),
+    P_value = format_pval(test_result$p.value)
+  )
+})
+
+## Show with kableExtra
+cor_table_ita %>%
+  kable("html", caption = "Italian - Spearman Correlation Between Causalness Degree and Anticausative Usage by Period") %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover", "condensed"))
+
+
+# Spanish
+
+## Individual periods datasets for Italian
+datasets_es <- list(
+  Period1 = merged_data_es_noncaus_1,
+  Period2 = merged_data_es_noncaus_2,
+  Period3 = merged_data_es_noncaus_3,
+  Period4 = merged_data_es_noncaus_4
+)
+
+## Make a dataframe with the Spearman correlation and p-values
+cor_table_es <- purrr::imap_dfr(datasets_es, function(df, period) {
+  test_result <- cor.test(df$caus_degree, df$prop_antic_vs_zero, method = "spearman", exact = FALSE)
+  
+  tibble(
+    Period = period,
+    Spearman_Correlation = round(test_result$estimate, 3),
+    P_value = format_pval(test_result$p.value)
+  )
+})
+
+## Show with KableExtra
+cor_table_es %>%
+  kable("html", caption = "Spearman Correlation Between Causalness and Anticausative Usage by Period (Spanish)") %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover", "condensed"))
+
+```
+
+### Lexical or semantic effects?
+
+The correlations discussed above are based on verb meaning, but we maintain that it is important to also discuss lemma-effects. 
+
+In particular, if the degree of causalness were a direct consequence of the degree of spontaneity of the event (Heidinger 2015), we would expect verbs that lexicalize the same event (and therefore presumably share the same degree of spontaneity) to have substantially the same causalness degree. We have verified whether this is the case by looking at the Italian data for period IV. 
+
+```{r}
+# Step 1: Calculate causal degree for Italian lemmas
+caus_degree_ita_lemma <- romall %>%
+  filter(language == "italian") %>%
+  group_by(lemma, vnc_period_apr25) %>%
+  summarise(caus_degree = sum(semantics == "caus") * 100 / n(), .groups = "drop")
+
+# Step 2: Calculate coding percentages
+coding_percentages_ita_lemma <- romall %>%
+  filter(language == "italian") %>%
+  group_by(lemma, semantics, coding, vnc_period_apr25) %>%
+  summarise(count = n(), .groups = "drop") %>%
+  pivot_wider(names_from = coding, values_from = count, values_fill = 0) %>%
+  mutate(
+    caus_degree_vs_zero = caus * 100 / (caus + zero),
+    prop_antic_vs_zero = antic * 100 / (antic + zero)
+  )
+
+# Step 3: Merge the datasets
+merged_data_ita_lemma <- left_join(
+  caus_degree_ita_lemma,
+  coding_percentages_ita_lemma,
+  by = c("lemma", "vnc_period_apr25")
+)
+
+# Step 4: Filter for noncausative semantics and specific time period
+merged_data_ita_noncaus_4_lemma <- merged_data_ita_lemma %>%
+  filter(semantics == "noncaus", vnc_period_apr25 == "1620-1968")
+
+# Step 5: Create verb meaning groups
+groupings <- list(
+  burn = c("ardere", "bruciare"),
+  fill = c("empiere", "riempire"),
+  melt = c("sciogliere", "fondere"),
+  rise = c("alzare", "sollevare"),
+  rock = c("dondolare", "oscillare"),
+  split = c("dividere", "separare"),
+  stop = c("arrestare", "fermare"),
+  freeze = c("gelare", "ghiacciare")
+)
+
+# Assign group labels
+merged_data_ita_noncaus_4_lemma <- merged_data_ita_noncaus_4_lemma %>%
+  mutate(group = map_chr(lemma, function(l) {
+    matched_group <- names(keep(groupings, ~ l %in% .x))
+    if (length(matched_group) > 0) matched_group else NA_character_
+  })) %>%
+  filter(!is.na(group)) %>%
+  mutate(group = factor(group, levels = names(groupings)))
+
+# Step 6: Plot
+ggplot(merged_data_ita_noncaus_4_lemma, aes(
+  x = caus_degree,
+  y = prop_antic_vs_zero,
+  label = lemma,
+  color = group,
+  fill = group
+)) +
+  geom_point() +
+  geom_text_repel(
+    data = merged_data_ita_noncaus_4_lemma %>%
+      filter(lemma %in% unlist(groupings)),
+    aes(color = group),
+    hjust = 0.5,
+    vjust = -0.5,
+    size = 4
+  ) +
+  labs(
+    x = "Causalness",
+    y = "% Anticausative"
+  ) +
+  theme_minimal() +
+  theme(text = element_text(size = 14)) +
+  scale_color_manual(
+    name = "Meaning",
+    values = c(
+      burn = "red", fill = "blue", melt = "purple", rise = "brown",
+      rock = "green", split = "cyan", stop = "orange", freeze = "darkgrey"
+    )
+  ) +
+  scale_fill_manual(
+    name = "Meaning",
+    values = c(
+      burn = "red", fill = "blue", melt = "purple", rise = "brown",
+      rock = "green", split = "cyan", stop = "orange", freeze = "darkgrey"
+    )
+  ) +
+  guides(color = guide_legend(override.aes = list(shape = 16, size = 4)))
 ```
 
 
