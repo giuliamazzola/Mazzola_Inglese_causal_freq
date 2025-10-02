@@ -1,10 +1,10 @@
 ---
 title: "Causalness, frequency, diachrony and the causal-noncausal alternation in Italian and Spanish"
-subtitle: "Anonymous submission to Corpus Linguistics and Linguistic Theory - April 2025"
+subtitle: "Anonymous resubmission after review to Corpus Linguistics and Linguistic Theory - September 2025"
 format:
   html:
     toc: true
-    toc-depth: 2
+    toc-depth: 3
     toc-location: left
 ---
 
@@ -355,14 +355,18 @@ ita <- ita %>%
 esp <- esp %>%
   left_join(caus_use_es, by = c("es_vnc70_apr25" = "es_vnc70_apr25", "lemma" = "lemma"))
 
+names(ita)[duplicated(names(ita))]
+
 # 3. Rename columns to match target names before merging into romall
 ita <- ita %>%
+  select(-any_of(c("vnc_period_apr25", "causalness_degree_apr25"))) %>%
   rename(
     vnc_period_apr25 = ita_vnc70_apr25,
     causalness_degree_apr25 = caus_use_ita_apr25
   )
 
 esp <- esp %>%
+  select(-any_of(c("vnc_period_apr25", "causalness_degree_apr25"))) %>%
   rename(
     vnc_period_apr25 = es_vnc70_apr25,
     causalness_degree_apr25 = caus_use_es_apr25
@@ -373,11 +377,13 @@ combined <- bind_rows(ita, esp)
 
 # 5. Join back to romall by id and lemma
 romall <- romall %>%
+  select(-any_of(c("vnc_period_apr25", "causalness_degree_apr25"))) %>%
   left_join(combined %>% select(id, lemma, vnc_period_apr25, causalness_degree_apr25),
             by = c("id", "lemma"))
 
 
 nc <- nc %>%
+  select(-any_of(c("vnc_period_apr25", "causalness_degree_apr25"))) %>%
   left_join(combined %>% select(id, lemma, vnc_period_apr25, causalness_degree_apr25),
             by = c("id", "lemma"))
 
@@ -483,18 +489,17 @@ plot_ita_2 <- ggplot(merged_data_ita_noncaus_2, aes(x = caus_degree, y = prop_an
 plot_ita_3 <- ggplot(merged_data_ita_noncaus_3, aes(x = caus_degree, y = prop_antic_vs_zero, label = meaning)) +
   geom_point() +
   labs(x = "Causalness",
-       y = "%anticausative", title = "1420-1699") +
+       y = "%anticausative", title = "1550-1619") +
   theme_minimal() +
   theme(text = element_text(size = 14))
 
 plot_ita_4 <- ggplot(merged_data_ita_noncaus_4, aes(x = caus_degree, y = prop_antic_vs_zero, label = meaning)) +
   geom_point() +
   labs(x = "Causalness",
-       y = "%anticausative", title = "1700-2001") +
+       y = "%anticausative", title = "1620-1968") +
   theme_minimal() +
   theme(text = element_text(size = 14))
 
-library(gridExtra)
 grid.arrange(plot_ita_1, plot_ita_2, plot_ita_3, plot_ita_4, nrow = 2, ncol = 2,  top = "Italian Correlation Plot")
 
 ##Script for Figure 7
@@ -526,7 +531,6 @@ plot_es_4 <- ggplot(merged_data_es_noncaus_4, aes(x = caus_degree, y = prop_anti
   theme_minimal() +
   theme(text = element_text(size = 14))
 
-library(gridExtra)
 grid.arrange(plot_es_1, plot_es_2, plot_es_3, plot_es_4, nrow = 2, ncol = 2,  top = "Spanish Correlation Plot")
 
 
@@ -749,19 +753,6 @@ ita_agg <- ita_agg %>%
   filter(!is.na(causalness_lagged))
 ```
 
- * Step 3: Adjust proportions slightly to avoid exact 0 and 1
-
-```{r}
-ita_agg <- ita_agg %>%
-  mutate(proportion_adj = (proportion_anticausative * (total_count - 1) + 0.5) / total_count)
-
-ita_agg<-ita_agg %>%
-  filter(!is.na(proportion_adj), !is.na(causalness_lagged))
-
-ita_agg <- ita_agg %>%
-  mutate(across(5:8, ~ round(.x, 2))) 
-
-```
 
 ## Spanish data: prepare for Beta Regression
 
@@ -795,26 +786,26 @@ es_agg <- es_agg %>%
   filter(!is.na(causalness_lagged)) 
 ```
 
-* Step 3:Adjust proportions slightly to avoid exact 0 and 1
-
-
-```{r }
-es_agg <- es_agg %>%
-  mutate(proportion_adj = (proportion_anticausative * (total_count - 1) + 0.5) / total_count)
-
-es_agg<-es_agg %>%
-  filter(!is.na(proportion_adj), !is.na(causalness_lagged))
-
-es_agg <- es_agg %>%
-  mutate(across(5:8, ~ round(.x, 2))) 
-
-```
 
 
 ## Fit the Beta Regression model
 
+### Prepare the data for the regression model
+
 * Step 1: join the Italian and Spanish sub-dataset
 * Step 2: make the categorical variable into factors; transform `period` into a numeric variable to be able to use it as a smooth term
+* Step 3: handling proportions for beta regression and adjust the numeric variables
+
+In our data, the dependent variable `proportion_anticausative` takes values between 0 and 1. However, some observations are exactly 0 or 1. This poses a problem for beta regression (and its GAM extension with family = betar), because the beta distribution is only defined on the open interval (0,1).
+
+To address this, we applied a small adjustment:
+
+We created a copy of the original variable (`proportion_anticausative_notadj`) to preserve the raw values, including 0s and 1s.
+
+We replaced the original `proportion_anticausative` with a slightly modified version where values equal to 0 are nudged to a very small positive number (ε = 0.000001), and values equal to 1 are nudged to just below 1 (1 – ε).
+
+This ensures that all proportions are strictly within (0,1), making them suitable for beta regression, while still preserving the original variable for transparency and reference.
+
 
 ```{r}
 # Step 1
@@ -841,6 +832,25 @@ join$period_cat<-as.factor(join$period)
 join$period<-as.factor(join$period)
 
 join$period <- as.numeric(join$period_cat)
+
+# Step 3: adjust the numeric variables to avoid exact 0s and 1s in the dependent variable and to make NAs into 0s for the predictors
+
+
+epsilon <- 1e-6  # small adjustment so values fall strictly in (0,1)
+
+join <- join %>%
+  mutate(
+    causalness_degree = ifelse(is.na(causalness_degree), 0, causalness_degree),
+    causalness_lagged = ifelse(is.na(causalness_lagged), 0, causalness_lagged),
+    proportion_anticausative_notadj = proportion_anticausative,  # keep original
+    proportion_anticausative = pmin(pmax(proportion_anticausative, epsilon), 1 - epsilon)  # adjusted
+  )
+
+# quick checks
+range(join$proportion_anticausative_notadj, na.rm = TRUE)  # should still show 0 and 1
+range(join$proportion_anticausative, na.rm = TRUE)         # should now be (0,1)
+all(join$proportion_anticausative > 0 & join$proportion_anticausative < 1)  # should be TRUE
+
 ```
 
 Hereby a summary of the dataset with only unique combinations of lemma and period and their anticausative count, proportion, synchronic and lagged causalness degree:
@@ -853,7 +863,7 @@ summary_table <- join %>%
   summarise(
     N_Antic = sum(anticausative_count, na.rm = TRUE),   # Total count of anticausatives
     N_Total = sum(total_count, na.rm = TRUE),             # Total count of all occurrences
-    `%_Antic` = proportion_anticausative * 100,           # Directly use the original proportion value
+    `%_Antic_adjusted` = proportion_anticausative * 100,           # Directly use the original proportion value
     Causalness_Degree = causalness_degree,                # Use the original value
     Causalness_Lagged = causalness_lagged                 # Use the original value
   ) %>%
@@ -866,206 +876,309 @@ summary_table %>%
   collapse_rows(columns = c(1, 2), valign = "top")  # Collapse the rows for language and lemma
 ```
 
-* Step 3: Fit a beta regression model with `mgvc::gam`: `model1` is the maximal model which includes 
+### Model fit and model selection
 
-+ `language` as a main effect; You must include `language` as a main effect in the model if it is a factor, when you use it as a smooth modifier (see argument by= below)
-+ `s(causalness_lagged, k=20)` and `s(period, k=5)`, global smooth terms
-+ ` s(causalness_lagged, by = language, k = 20, bs = "cs", m = 1)` and `s(period, by = language, k = 5, bs = "cs", m= 1)` as group-wise smooths (by `language`)
-+ `family = betar(...)`: This tells the model to use a beta regression family, which is designed for modeling proportions or rates — i.e., values that are strictly between 0 and 1 (like 0.23 or 0.85). 
-+ `link = "logit"`:this defines the link function, which transforms the predicted values to stay within the (0, 1) range.
+Hereby we fit a beta regression model with `mgvc::gam`: *model1* is the maximal model which includes 
 
++ `s(causalness_degree, k=10), s(causalness_lagged, k=10) and s(period, k=5)`: global smooth terms — these model the overall nonlinear effects of each predictor across all languages.
+
++ `s(causalness_lagged, by = language, k = 10, bs = "cs", m = 1), s(causalness_degree, by = language, k = 10, bs = "cs", m = 1)`, and `s(period, by = language, k = 5, bs = "cs", m= 1)`: group-wise smooths (by language) — these allow the shape of the smooth to differ between Italian and Spanish.
+
++ `family = betar(...)`: the model uses a beta regression family, designed for proportions or rates strictly between 0 and 1.
+
++ `link = "logit"`: the logit link function ensures predicted values remain within the (0, 1) range.
+
++ `method = "ML"`: the model is fitted using maximum likelihood estimation (ML) rather than the default restricted maximum likelihood (REML). ML is typically used when comparing models with different fixed-effect structures, since REML estimates are not directly comparable across models with different smooth terms.
 
 ```{r}
 model1 <- gam(
   proportion_anticausative ~ 
-    language + #you must include interaction terms as main effects too!
-    s(causalness_lagged, k=20)+
+    s(causalness_lagged, k=10)+
+    s(causalness_degree, k=10)+
     s(period, k=5)+
-    s(causalness_lagged, by = language, k = 20, bs = "cs", m = 1) + 
+    s(causalness_lagged, by = language, k = 10, bs = "cs", m = 1) +
+    s(causalness_degree, by = language, k = 10, bs = "cs", m = 1) +
     s(period, by = language, k = 5, bs = "cs", m= 1),   
   family = betar(link = "logit"),                 
-  data = join
+  data = join,
+  method="ML"
 )
 
 # Summarize the model
 summary(model1)
 
-gam.check(model1)
-
-
 ```
 
 
-The function `gam.check()` runs a set of diagnostic checks on your fitted gam model (like model1). It's used to evaluate whether your model is well-specified and whether the smoothing basis (the k values) is adequate. 
-* k-index – Should ideally be ≥ 1; 
-* values < 1 may mean k is too low. p-value – If this is low (e.g. < 0.05) and edf ≈ k', you may need a larger k.
-
-Here all p-values are high and edf is well below k', so our smooth terms are well-behaved and the choice of k is appropriate.
-
-However, the summary indicates that the `period` smooth and its group-wise interaction are non-significant. We proceed with a backward selection.
 
 * Step 3: Backward selection 
 
-In `model2` we start by removing `s(period, by = language, k = 5, bs = "cs", m= 1)`. We check the difference with three different methods:
- + `compareML()` (from the itsadug package) compares two or more gam or gamm models using AIC, BIC, log-likelihood, and explained deviance.
- + `anova.gam()` compares two nested GAM models (e.g., model1 and a simpler model2) using a likelihood ratio test (Chi-squared test)
+In *model2* we start by removing `s(period, k=5)+`, as it is the term with the highest pvalue. 
+ + `anova(..., test="Chisq")` compares two nested GAM models (e.g., model1 and a simpler model2) using a likelihood ratio test (Chi-squared test)
  + `AIC()`: it calculates the AIC of the two models, which is a measure of model fit that balances goodness-of-fit with model complexity (penalizes overfitting)
- 
-These three tests tell us that although the AIC of model1 is better (also shown by the ANOVA), model2 is preferred.
+
+We continue removing terms with high p-value, until we reach the most parsimonious model which is model4.
+
+The anova shows is ok to remove the term.
+
 
 ```{r}
-#remove s(period, by = language, k = 5, bs = "cs", m= 1),   
 
 model2 <- gam(
   proportion_anticausative ~ 
-    language + 
-    s(causalness_lagged, k=20)+
-    s(period, k=5)+
-    s(causalness_lagged, by = language, k = 20, bs = "cs", m = 1),
+    s(causalness_lagged, k=10)+
+    s(causalness_degree, k=10)+
+    #s(period, k=5)+
+    s(causalness_lagged, by = language, k = 10, bs = "cs", m = 1) +
+    s(causalness_degree, by = language, k = 10, bs = "cs", m = 1)+
+    s(period, by = language, k = 5, bs = "cs", m= 1),   
   family = betar(link = "logit"),                 
-  data = join
+  data = join,
+  method="ML"
 )
 
-anova.gam(model1, model2, test = "Chisq") 
-
-compareML(model1, model2)
-
-AIC(model1, model2)
-
+# Summarize the model
 summary(model2)
-
+anova(model1, model2, test="Chisq")
+AIC(model1, model2)
 ```
 
-
-So we take `model2` to be better, and we proceed looking at its summary which shows that `s(period)` is non-significant. We fit `model3` without it, and use the same tests. All of them show that `model3` is better.
+In *model3* we need to remove `  s(causalness_lagged, by = language, k = 10, bs = "cs", m = 1)`, as it is the term with the highest pvalue. Anova shows it's not ok to remove. 
 
 ```{r}
-# remove #s(period, k=5)
 model3 <- gam(
   proportion_anticausative ~ 
-    language +
-    s(causalness_lagged, k=20)+
-    s(causalness_lagged, by = language, k = 20, bs = "cs", m = 1),
+    s(causalness_lagged, k=10)+
+    s(causalness_degree, k=10)+
+    #s(period, k=5)+
+    #s(causalness_lagged, by = language, k = 10, bs = "cs", m = 1) +
+    s(causalness_degree, by = language, k = 10, bs = "cs", m = 1)+
+    s(period, by = language, k = 5, bs = "cs", m= 1),   
   family = betar(link = "logit"),                 
-  data = join
+  data = join,
+  method="ML"
 )
 
+# Summarize the model
 summary(model3)
-
-anova.gam(model3, model2, test = "Chisq") 
-
-compareML(model3, model2)
-
-AIC(model3, model2)
-
-gam.check(model3)
-
+anova(model3, model2, test="Chisq")
+AIC(model3, model2) 
 ```
+We go back to *model2* and in *model4* we remove `s(period, by = language, k = 5, bs = "cs", m= 1)` which is the second next highest p-value. The comparison between *model2* and model4 shows it is ok to remove this term.
 
-
-We proceed by removing `s(causalness_lagged, k=20)` (non-signitcant in `model3`) in `model4`, and all the tests indicate that this is the best fitted model (see also the `gam.check` output).
 
 ```{r}
-
-# remove #s(causalness_lagged, k=20)
- 
 model4 <- gam(
   proportion_anticausative ~ 
-    language +
-    s(causalness_lagged, by = language, k = 20, bs = "cs", m = 1),
+    s(causalness_lagged, k=10)+
+    s(causalness_degree, k=10)+
+    #s(period, k=5)+
+    s(causalness_lagged, by = language, k = 10, bs = "cs", m = 1) +
+    s(causalness_degree, by = language, k = 10, bs = "cs", m = 1),
+    #s(period, by = language, k = 5, bs = "cs", m= 1),   
   family = betar(link = "logit"),                 
-  data = join
+  data = join,
+  method="ML"
+)
+# Summarize the model
+summary(model4)
+anova(model2, model4, test="Chisq")
+AIC(model2, model4)
+
+```
+In *model5* we need to remove `s(causalness_degree, k=10)`, as it is only marginally significant. Anova shows that removing it does not affect the model. 
+
+```{r}
+model5 <- gam(
+  proportion_anticausative ~ 
+    s(causalness_lagged, k=10)+
+    #s(causalness_degree, k=10)+
+    #s(period, k=5)+
+    s(causalness_lagged, by = language, k = 10, bs = "cs", m = 1) +
+    s(causalness_degree, by = language, k = 10, bs = "cs", m = 1),
+    #s(period, by = language, k = 5, bs = "cs", m= 1),   
+  family = betar(link = "logit"),                 
+  data = join,
+  method="ML"
+)
+# Summarize the model
+summary(model5) 
+anova(model4, model5, test="Chisq")
+AIC(model4, model5) 
+
+```
+The next candidate for removal is `s(causalness_lagged)` in *model6* (as we tried already removing `s(causalness_lagged, by = language, k = 10, bs = "cs", m = 1)`. It is not completely ok to remove that, because the anova is marginally significant and the AIC is lower for *model 5*. 
+
+So we go back to *model 5* and this time in *model 7* we remove `s(causalness_lagged, by = language, k = 10, bs = "cs", m = 1)`. It seems that *model5* is our final model, as removing this group-wise smooth is not ok.
+
+```{r}
+model6 <- gam(
+  proportion_anticausative ~ 
+    #s(causalness_lagged, k=10)+
+    #s(causalness_degree, k=10)+
+    #s(period, k=5)+
+    s(causalness_lagged, by = language, k = 10, bs = "cs", m = 1) +
+    s(causalness_degree, by = language, k = 10, bs = "cs", m = 1),
+    #s(period, by = language, k = 5, bs = "cs", m= 1),   
+  family = betar(link = "logit"),                 
+  data = join,
+  method="ML"
+)
+# Summarize the model
+summary(model6) #
+anova(model6, model5, test="Chisq")
+AIC(model6, model5) 
+
+model7 <- gam(
+  proportion_anticausative ~ 
+    s(causalness_lagged, k=10)+
+    #s(causalness_degree, k=10)+
+    #s(period, k=5)+
+    #s(causalness_lagged, by = language, k = 10, bs = "cs", m = 1) +
+    s(causalness_degree, by = language, k = 10, bs = "cs", m = 1),
+    #s(period, by = language, k = 5, bs = "cs", m= 1),   
+  family = betar(link = "logit"),                 
+  data = join,
+  method="ML"
+)
+# Summarize the model
+summary(model5) #
+anova(model5, model7, test="Chisq")
+AIC(model7, model5) 
+
+
+```
+## Diagnostics of `model5`
+
+```{r}
+# --- 1. Basic GAM checks (smoothness, k-index, residuals) ---
+gam.check(model5)  
+
+# --- 2. Concurvity (nonlinear collinearity among smooths) ---
+concurvity(model5, full = TRUE)
+
+
+```
+The QQ plot of residuals (gam.check) showed that the observed residuals closely followed the expected theoretical quantiles, with only minor deviations in the tails, suggesting that the beta regression model adequately captured the distributional assumptions.
+
+The residuals versus fitted values plot showed that most observations clustered around mid-range fitted values (≈0.5), with some vertical stacking due to repeated predicted values. Residuals were approximately centered around zero without strong systematic trends, suggesting no major violations of model assumptions.
+
+Basis dimension checks (k-index = 0.94–1.03, all p > 0.2) indicated that the chosen number of knots (k = 10) was adequate, with no evidence of undersmoothing.
+
+Concurvity checks indicated very high redundancy between the main smooth of causalness_lagged and its by-language interactions (concurvity ≈ 0.92–1.0). This suggests that the shared and language-specific smooths are not easily separable, likely because the language-specific effects were negligible. This was already noted above. Concurvity among the causalness_degree smooths was low to moderate (≤ 0.56 observed), and therefore not considered problematic.
+
+## Visualise the results `model5`
+
+Visualisation of the effect of `causalness_lagged`, `causalness_lagged` by `language` and `causalness_degree` by `language` of *model5* (now renamed *model*).
+
+
+
+When plotting the group-wise interaction of `causalness_lagged` we see that Italian and Spanish essentially overlap. It is quite puzzling that the model selection suggested to keep it, as there is clearly no effect. We take it to mean that the real effect is the one of `causalness_lagged` by itself, it is capturing everything important. The group-specific smooths are essentially flat → not adding meaningful information. Statistically, the likelihood test picks up the tiniest difference, but for interpretation and visualization, it’s safe to consider them redundant.
+
+```{r}
+model <- model5
+
+
+# ---- 1. Prediction grid for causalness_lagged (shared smooth) ----
+newdata_lagged <- tibble(
+  causalness_lagged = seq(min(join$causalness_lagged), max(join$causalness_lagged), length.out = 200),
+  causalness_degree = mean(join$causalness_degree, na.rm = TRUE),
+  language = factor("Italian", levels = levels(join$language))  # shared smooth
 )
 
-summary(model4)
+pred_lagged <- predict(model, newdata_lagged, type = "link", se.fit = TRUE)
 
-anova.gam(model3, model4, test = "Chisq") 
+newdata_lagged <- newdata_lagged %>%
+  mutate(
+    fit_link  = pred_lagged$fit,
+    se_link   = pred_lagged$se.fit,
+    fit_resp  = plogis(fit_link),
+    lower_resp = plogis(fit_link - 2 * se_link),
+    upper_resp = plogis(fit_link + 2 * se_link)
+  )
 
-compareML(model3, model4)
+p_lagged <- ggplot(newdata_lagged, aes(x = causalness_lagged)) +
+  geom_line(aes(y = fit_resp), color = "#fc8961", linewidth = 1.2) +
+  geom_ribbon(aes(ymin = lower_resp, ymax = upper_resp), fill = "#fc8961", alpha = 0.2) +
+  labs(x = "Causalness Lagged", y = "Proportion of Anticausative") +
+  ylim(0, 1) +
+  theme_minimal()
 
-AIC(model3, model4)
+# ---- 2. Prediction grid for causalness_degree by language (interaction) ----
+newdata_degree <- expand.grid(
+  causalness_degree = seq(min(join$causalness_degree, na.rm = TRUE), max(join$causalness_degree, na.rm = TRUE), length.out = 200),
+  language = levels(join$language)
+) %>%
+  as_tibble() %>%
+  mutate(
+    causalness_lagged = mean(join$causalness_lagged, na.rm = TRUE),
+    language = factor(language, levels = levels(join$language))
+  )
 
-gam.check(model4)
-```
+pred_degree <- predict(model, newdata_degree, type = "link", se.fit = TRUE)
 
-* Step 4: Print the results of the best model `model4`
+newdata_degree <- newdata_degree %>%
+  mutate(
+    fit_link   = pred_degree$fit,
+    se_link    = pred_degree$se.fit,
+    fit_resp   = plogis(fit_link),
+    lower_resp = plogis(fit_link - 2 * se_link),
+    upper_resp = plogis(fit_link + 2 * se_link)
+  )
 
-```{r}
-# Get the report table
-results <- report::report_table(model4)
-
-# Define which columns to format (only numeric ones)
-numeric_cols <- sapply(results, is.numeric)
-
-# Round numeric columns to 3 digits, suppress scientific notation
-results_clean <- results
-results_clean[numeric_cols] <- lapply(results[numeric_cols], function(x) {
-  ifelse(is.na(x), NA, round(x, 3))
-})
-
-# Print 
-knitr::kable(results_clean, digits = 3)
-
-
-```
-
-
-## Visualise the results
-
-Visualisation of the effect of `causalness_lagged` by `language` and `language` of `model4` (now renamed `model`).
-
-```{r}
-model<-model4
-
-# Incorporate predictions from beta regression to the original dataset
-fit <- join %>%
-  mutate(fit = predict(model4, newdata = join, type = "response"))
-
-ggplot(fit, aes(x = causalness_lagged, y = proportion_anticausative, color = causalness_lagged)) +
-  geom_point( alpha = 0.7, color= "#fc8961") +  
-  geom_smooth(method = "gam", se = F, aes(group = language), color= "#fc8961", linewidth = 1.2) +  
-    facet_wrap(~ language) +  
-  labs(
-    title = "",
-    x = "Lagged Causalness Degree",
-    y = "Proportion of Anticausative",
-    color = "Lagged Causalness Degree"
-  ) +
-  ylim(0,1)+
-  theme_minimal() +
-  theme(legend.position = "bottom")
-
-# Set causalness_lagged to its mean value to isolate the main effect of language
-mean_causalness_lagged <- mean(join$causalness_lagged)
-
-# Create a new dataset with the fixed causalness_lagged (set to mean)
-fit2 <- expand.grid(language = unique(join$language), 
-                        causalness_lagged = mean_causalness_lagged)
-
-# Get predictions from the model (with causalness_lagged held constant)
-fit2$predicted_proportion <- predict(model4, newdata = fit2, type = "response")
-
-# Plot the main effect of language
-ggplot(fit2, aes(x = language, y = predicted_proportion)) +
-  geom_point(alpha = 0.7, size = 3,  color = "#fc8961") +  
-  geom_line(aes(group = 1), color = "#fc8961", linewidth = 1.2) +  
-  labs(
-    title = "",
-    x = "Language",
-    y = "Predicted Proportion of Anticausative",
-    color = "Language"
-  ) +
+p_degree_int <- ggplot(newdata_degree, aes(x = causalness_degree, y = fit_resp, linetype = language)) +
+  geom_line(color = "#fc8961", linewidth = 1.2) +
+  geom_ribbon(aes(ymin = lower_resp, ymax = upper_resp), fill = "#fc8961", alpha = 0.2, color = NA) +
+  labs(x = "Causalness Degree", y = "Proportion of Anticausative", linetype = "Language") +
   ylim(0, 1) +
   theme_minimal() +
   theme(legend.position = "bottom")
 
 
 
+# ---- 4. Prediction grid for causalness_lagged by language (interaction) ----
+newdata_lagged_int <- expand.grid(
+  causalness_lagged = seq(min(join$causalness_lagged), max(join$causalness_lagged), length.out = 200),
+  language = levels(join$language)
+) %>%
+  as_tibble() %>%
+  mutate(
+    causalness_degree = mean(join$causalness_degree, na.rm = TRUE),
+    language = factor(language, levels = levels(join$language))
+  )
+
+pred_lagged_int <- predict(model, newdata_lagged_int, type = "link", se.fit = TRUE)
+
+newdata_lagged_int <- newdata_lagged_int %>%
+  mutate(
+    fit_link   = pred_lagged_int$fit,
+    se_link    = pred_lagged_int$se.fit,
+    fit_resp   = plogis(fit_link),
+    lower_resp = plogis(fit_link - 2 * se_link),
+    upper_resp = plogis(fit_link + 2 * se_link)
+  )
+
+p_lagged_int <- ggplot(newdata_lagged_int, aes(x = causalness_lagged, y = fit_resp, linetype = language)) +
+  geom_line(color = "#fc8961", linewidth = 1.2) +
+  geom_ribbon(aes(ymin = lower_resp, ymax = upper_resp), fill = "#fc8961", alpha = 0.2, color = NA) +
+  labs(
+    x = "Causalness Lagged",
+    y = "Proportion of Anticausative",
+    linetype = "Language"
+  ) +
+  ylim(0, 1) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+
+
+p_lagged
+
+p_lagged_int
+
+p_degree_int
 
 
 ```
- 
-
 
 
 
