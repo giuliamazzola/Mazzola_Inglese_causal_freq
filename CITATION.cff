@@ -1,0 +1,33 @@
+cff-version: 1.2.0
+message: "If you use this software or the associated data, please cite it as below."
+title: "Replication materials for: Causalness, frequency, diachrony and the causal-noncausal alternation in Italian and Spanish"
+version: 1.0.0
+doi: https://doi.org/10.5281/zenodo.17966594
+release-date: YYYY-MM-DD
+
+authors:
+  - family-names: Mazzola
+    given-names: Giulia
+    affiliation: Newcastle University
+    orcid: https://orcid.org/0000-0002-7532-8671
+  - family-names: Inglese
+    given-names: Guglielmo 
+    affiliation: Università di Torino 
+    orcid: https://orcid.org/0000-0003-2577-8348 
+
+repository-code: https://github.com/giuliamazzola/Mazzola_Inglese_causal_freq
+
+license: MIT
+
+preferred-citation:
+  type: generic
+  title: "Replication materials for: Causalness, frequency, diachrony and the causal-noncausal alternation in Italian and Spanish"
+  authors:
+    - family-names: Mazzola
+      given-names: Giulia
+    - family-names: Inglese
+      given-names: Guglielmo
+  year: 2026 (to appear)
+  publisher: Zenodo
+  doi: https://doi.org/10.5281/zenodo.17966594
+s

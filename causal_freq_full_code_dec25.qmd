@@ -1,6 +1,7 @@
 ---
 title: "Causalness, frequency, diachrony and the causal-noncausal alternation in Italian and Spanish"
 subtitle: "Corpus Linguistics and Linguistic Theory - final submission December 2025"
+doi: https://doi.org/10.5281/zenodo.17966594
 author:
   - name: Giulia Mazzola
     affiliation: Newcastle University
