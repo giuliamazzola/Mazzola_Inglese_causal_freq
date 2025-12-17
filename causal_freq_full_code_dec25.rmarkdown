@@ -16,6 +16,8 @@ format:
     toc-location: left
 ---
 
+
+
 <div style="text-align:right">
   <a href="https://github.com/giuliamazzola/Mazzola_Inglese_causal_freq" target="_blank">
     <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" width="30" alt="GitHub repository">
@@ -23,6 +25,8 @@ format:
 </div>
 
 Replication materials for: Mazzola & Inglese, "Causalness, frequency, diachrony and the causal-noncausal alternation in Italian and Spanish" in *Corpus Linguistics and Linguistic Theory* (Accepted December 2025). Full citation information will be released after publication.
+
+
 
 ```{r}
 #| label: setup
@@ -37,7 +41,6 @@ knitr::opts_chunk$set(
 )
 
 ```
-
 
 ```{r}
 
@@ -76,6 +79,8 @@ setwd(here::here())
 ```
 
 
+
+
 # Part I: Calculating the causalness degree over time
 
 Cross-linguistic work on the causal-noncausal alternation has shown that there exists a strong correlation between the frequency of use of a given verb in causal vs. noncausal contexts and its preferred coding pattern for the alternation, with verbs typically occurring in causal contexts preferably selecting the anticausative pattern (Haspelmath et al. 2014). These findings rest upon the assumption that the correlation between frequency and coding is diachronic in nature, but this has so far not been tested on historical data.
@@ -85,6 +90,8 @@ Data for this study comes from diachronic corpora of Italian (MIDIA, D’Achille
 Our dataset `romall` includes causal and noncausal observations. The subset `nc` only contains noncausal observations, and only includes "the variable contexts", only verb lemma with alternation between zero and anticausative marking, since from a variationist point of view is important to only look at contexts where the variation actually occurs.
 
 If we zoom in onto the panchronic percentage of noncausal usage of the verbs and plot them against the spontaneity scale (or causative prominence) proposed by Haspelmath (1993), we can observe that Italian and Spanish substantially behaves like other languages in the sample studied by Haspelmath et al. (2014). Although the data in the plot below displays the expected trend, the results may be problematic in that the percentage of noncausal usages has been calculated over the entire Italian and Spanish datasets. The problem is that, since the data comes from diachronic corpora, one cannot be sure of the accuracy of this measurement, as the causalness degree may in fact be variable over time.
+
+
 
 ```{r}
 ## Script for Figure 2
@@ -115,6 +122,8 @@ print(plot_noncaus_tot)
 ```
 
 
+
+
 ## Overall purpose
 
 We would like to include a new predictor in our dataset, namely the **proportions of causal transitive uses (vs. non causal uses) of the verbs by time**, which we define as `causalness degree`. In order to do so we need to come up with a periodisation for our data (spanning between 1140 and 2001), which allows to calculate the relative frequency of causal uses by time. To reach a periodisation, a visual survey of the data can be instructive, it might pose the problem of the analyst’s bias, as “different researchers may arrive at different groupings even for the same data set” (Gries & Hilpert 2008:2).
@@ -125,6 +134,8 @@ Gries & Hilpert (2008) propose a more accurate method to come up with meaningful
 
 The analyst needs to input the proportions of a given variant (in our case, causal uses) for periods, ideally decades. The choice of the periods size is somewhat arbitrary, but making different attempts helps to find the right balance between data sparsity and significance of the VNC results. Because at various points in the diachrony of our dataset data are scarce (see Histogram), we started with periods of 20 years and ended up with periods of 70 years. The VNC periodisation based on periods of 70 years is the one with the best results in statistical terms, as the standard deviation measure for different periods are large enough to show significant differences. Hereby we show the procedure.
 
+
+
 ```{r}
 ggplot(romall, aes(x=year, fill=semantics)) +
   geom_histogram(alpha = 0.5, position="stack") +
@@ -132,9 +143,13 @@ ggplot(romall, aes(x=year, fill=semantics)) +
   scale_fill_manual(labels=c("Causal", "Noncausal"), values= (c("#fc8961", "#b73779")))+   theme_minimal()
 ```
 
+
+
 ### Establish the 70-years periodisation
 
 * Step 1: Split the Italian and Spanish dataset. 
+
+
 
 ```{r}
 # Step 1
@@ -142,10 +157,14 @@ esp <- filter(romall, language=="spanish")
 ita <- filter(romall, language=="italian")
 ```
 
+
+
 The range of years in the italian dataset is `r range(ita$year)` and for Spanish `r range(esp$year)`.
 
 * Step 2: Create a new variable with the years groups in 70-years periods. Periods are indicated with the central years in the 70 years span, i.e. 1175 stands for the period between 1140 and 1210. 
 * Step 3: Create a table with proportions of causal and noncausal uses by 70-years periods
+
+
 
 
 ```{r}
@@ -200,6 +219,8 @@ ita_perctable70<-as.data.frame(ita_perctable70)
 ```
 
 
+
+
 ### Apply the Variability neighbour clustering (VNC)
 
 * Step 1: read the VNC instructions and download the VNC file at this [link]((https://global.oup.com/us/companion.websites/fdscontent/uscompanion/us/static/companion.websites/nevalainen/Gries-Hilpert_web_final/vnc.individual.html))
@@ -208,6 +229,8 @@ ita_perctable70<-as.data.frame(ita_perctable70)
 
 
 * Step 3: visualise input table for VNC and print it as a txt file
+
+
 
 ```{r}
 
@@ -249,7 +272,11 @@ write.table(table_ita, file = "ita_vnc_caus_70y_p.txt", sep = "\t", quote = FALS
 
 ```
 
+
+
 * Step 4:  enter vnc.individual(file.choose()) and, when prompted to choose/enter a file name, choose/enter the path to the file with the data to be analyzed on the harddrive (e.g. newdata.txt). Run this in a separate R script and follow the instructions on the console.
+
+
 
 ```{r, eval=FALSE, include=TRUE}
 
@@ -265,6 +292,8 @@ vnc.individual("VNC/ita_vnc_caus_70y.txt")
 
 ```
 
+
+
 Running the previous script will generate two graphs in separate windows: a dendrogram and a screeplot of the type shown below.
 
 The dendogram specifies how periods are clustered (the periods that are the most similar are amalgamated first). The analyst should asses how many development stages are considered relevant to the diachronic study. The screeplot produced by the VNC function allows the linguist to decide by comparing the distances between successive mergers (measured with standard deviations). Essentially, one should observe the slope from left to right, and take the number of clusters with the largest differences, until the slope is leveled off (i.e., until the difference between clusters is marginal). In this case 4 or 6 clusters seems adequate. Given that we want to minimise data sparsity, we make the most parsimonious choice and select the first 4 clusters.
@@ -274,6 +303,8 @@ The dendogram specifies how periods are clustered (the periods that are the most
 
 ![Dendogram and Screeplot Spanish](Es_VNC_plots.jpg)
 From the interpretation of the VNC results we end up with 4 significant periods for the development of the causal vs. non causal alternation in Spanish, dividing our dataset in the following periods: 1140-1209,1210-1279, 1280-1559, 1560-2001. Data are distributed across periods as summarised below. In Spanish causal uses are consistently higher than noncausal ones, but always below 60% except in the second period where they reach 73%.
+
+
 
 ```{r}
 
@@ -298,7 +329,11 @@ summary_es %>%  kbl(booktabs = TRUE, col.names = c("VNC periods", "Semantics", "
 
 ```
 
+
+
 For Italian, the relevant 4 periods indicated by the dendogram are 1200-1409, 1410-1549, 1550-1619 and 1620-1968, Data are distributed across periods as summarised below. In Italian, causal uses are consistently more frequent than non causal ones, always higher than 60%. Their relative frequency is at the highest in the second period, when they reach 73%, like in Spanish. However, the second VNC period in Italian is about a century later than in Spanish.
+
+
 
 ```{r}
 
@@ -323,11 +358,15 @@ summary_ita %>%  kbl(booktabs = TRUE, col.names = c("VNC periods", "Semantics", 
 
 ```
 
+
+
 ## Calculate the `Causalness Degree` 
 
 Once we found out the significant periods for the causal/non causal alternation, we calculate the share of causal uses by verb lemma and by period. Namely, every verb lemma in each of the four periods is assigned a number between 0 and 1, indicating the proportion (%) of causal uses *vs.* non causal uses. The table below summarises the distribution of causal uses by lemma and period (variable *caus_use*).
 
 Italian:
+
+
 
 ```{r}
 caus_use_ita<-ita %>%
@@ -342,7 +381,11 @@ caus_use_ita %>% DT::datatable(rownames=F, filter="top")
 
 ```
 
+
+
 Spanish:
+
+
 
 ```{r}
 caus_use_es <-esp %>%
@@ -358,7 +401,11 @@ caus_use_es %>% DT::datatable(rownames=F, filter="top")
 ```
 
 
+
+
 And finally rejoin the individual languages new information (`period70, vnc and causalness degree`) to the main dataset: 
+
+
 
 ```{r}
 
@@ -404,7 +451,6 @@ nc <- nc %>%
 
 ```
 
-
 ```{r, eval=FALSE, include=TRUE}
 
 #only run this if you want to save the results of the VNC in a new xlsx file
@@ -415,9 +461,13 @@ openxlsx::write.xlsx(nc, "noncaus_new_VNC.xlsx")
 
 ```
 
+
+
 ## Diachronic analysis of the noncausal usage and causalness degree correlation
 
 After calculating the diachronic causalness degree, we follow the procedure outlined in Heidinger (2015). For each verb in the two languages, we measure its correlation with the percentage of anticausative marking, iterating the count separately for each of the four periods. The results are shown in Figure 6 and Figure 7:
+
+
 
 ```{r}
 ##Calculate causalness degree by language and period
@@ -552,7 +602,11 @@ grid.arrange(plot_es_1, plot_es_2, plot_es_3, plot_es_4, nrow = 2, ncol = 2,  to
 ```
 
 
+
+
 The corresponding correlation measures (Spearman Correlation Coefficient, SCC), alongside with p-values and the number of tokens analyzed for each period are given in the tables below:
+
+
 
 
 ```{r}
@@ -622,11 +676,15 @@ cor_table_es %>%
 ```
 
 
+
+
 ### Lexical or semantic effects?
 
 The correlations discussed above are based on verb meaning, but we maintain that it is important to also discuss lemma-effects. 
 
 In particular, if the degree of causalness were a direct consequence of the degree of spontaneity of the event (Heidinger 2015), we would expect verbs that lexicalize the same event (and therefore presumably share the same degree of spontaneity) to have substantially the same causalness degree. We have verified whether this is the case by looking at the Italian data for period IV. 
+
+
 
 ```{r}
 # Step 1: Calculate causal degree for Italian lemmas
@@ -718,7 +776,11 @@ ggplot(merged_data_ita_noncaus_4_lemma, aes(
 ```
 
 
+
+
 # Part II: Frequency effects of causal degree on anticausative marking over time
+
+
 
 
 ```{r}
@@ -737,12 +799,16 @@ es_nc<-es_nc %>% rename(period=vnc_period_apr25, causalness_degree=causalness_de
 
 ```
 
+
+
 ## Italian data: prepare for Beta Regression
 
 Subset the Italian data to obtain unique combinations of lemma and period. 
 
  * Step 1: Aggregate data to calculate the proportion of anticausative codings
  
+
+
 ```{r}
 
 ita_agg <- ita_nc %>%
@@ -756,7 +822,11 @@ ita_agg <- ita_nc %>%
   ungroup()
 ```
 
+
+
  * Step 2: Create a lagged causalness_degree variable
+
+
 
 ```{r}
 ita_agg <- ita_agg %>%
@@ -769,11 +839,15 @@ ita_agg <- ita_agg %>%
 ```
 
 
+
+
 ## Spanish data: prepare for Beta Regression
 
 Subset the Spanish data to obtain unique combinations of lemma and period. 
 
 * Step 1: Aggregate data to calculate the proportion of anticausative codings:
+
+
 
 
 ```{r}
@@ -789,7 +863,11 @@ es_agg <- es_nc %>%
 
 ```
 
+
+
 * Step 2: Create a lagged causalness_degree variable:
+
+
 
 ```{r}
 es_agg <- es_agg %>%
@@ -800,6 +878,8 @@ es_agg <- es_agg %>%
   # Remove rows without previous causalness_degree (period 1)
   filter(!is.na(causalness_lagged)) 
 ```
+
+
 
 
 
@@ -820,6 +900,8 @@ We created a copy of the original variable (`proportion_anticausative_notadj`) t
 We replaced the original `proportion_anticausative` with a slightly modified version where values equal to 0 are nudged to a very small positive number (ε = 0.000001), and values equal to 1 are nudged to just below 1 (1 – ε).
 
 This ensures that all proportions are strictly within (0,1), making them suitable for beta regression, while still preserving the original variable for transparency and reference.
+
+
 
 
 ```{r}
@@ -868,7 +950,11 @@ all(join$proportion_anticausative > 0 & join$proportion_anticausative < 1)  # sh
 
 ```
 
+
+
 Hereby a summary of the dataset with only unique combinations of lemma and period and their anticausative count, proportion, synchronic and lagged causalness degree:
+
+
 
 ```{r}
 # Summarize the dataset 
@@ -891,6 +977,8 @@ summary_table %>%
   collapse_rows(columns = c(1, 2), valign = "top")  # Collapse the rows for language and lemma
 ```
 
+
+
 ### Model fit and model selection
 
 Hereby we fit a beta regression model with `mgvc::gam`: `model1` is the maximal model which includes 
@@ -904,6 +992,8 @@ Hereby we fit a beta regression model with `mgvc::gam`: `model1` is the maximal 
 + `link = "logit"`: the logit link function ensures predicted values remain within the (0, 1) range.
 
 + `method = "ML"`: the model is fitted using maximum likelihood estimation (ML) rather than the default restricted maximum likelihood (REML). ML is typically used when comparing models with different fixed-effect structures, since REML estimates are not directly comparable across models with different smooth terms.
+
+
 
 ```{r}
 model1 <- gam(
@@ -926,6 +1016,8 @@ summary(model1)
 
 
 
+
+
 * Step 3: Backward selection 
 
 In `model2` we start by removing `s(period, k=5)+`, as it is the term with the highest pvalue. 
@@ -935,6 +1027,8 @@ In `model2` we start by removing `s(period, k=5)+`, as it is the term with the h
 We continue removing terms with high p-value, until we reach the most parsimonious model.
 
 The anova shows is ok to remove the term.
+
+
 
 
 ```{r}
@@ -958,7 +1052,11 @@ anova(model1, model2, test="Chisq")
 AIC(model1, model2)
 ```
 
+
+
 In `model3` we need to remove `  s(causalness_lagged, by = language, k = 10, bs = "cs", m = 1)`, as it is the term with the highest pvalue. Anova shows it's not ok to remove. 
+
+
 
 ```{r}
 model3 <- gam(
@@ -979,7 +1077,11 @@ summary(model3)
 anova(model3, model2, test="Chisq")
 AIC(model3, model2) 
 ```
+
+
 We go back to `model2` and in `model4` we remove `s(period, by = language, k = 5, bs = "cs", m= 1)` which is the second next highest p-value. The comparison between `model2` and `model4` shows it is ok to remove this term.
+
+
 
 
 ```{r}
@@ -1001,7 +1103,11 @@ anova(model2, model4, test="Chisq")
 AIC(model2, model4)
 
 ```
+
+
 In `model5` we need to remove `s(causalness_degree, k=10)`, as it is only marginally significant. Anova shows that removing it does not affect the model. 
+
+
 
 ```{r}
 model5 <- gam(
@@ -1022,9 +1128,13 @@ anova(model4, model5, test="Chisq")
 AIC(model4, model5) 
 
 ```
+
+
 The next candidate for removal is `s(causalness_lagged)` in `model6` (as we tried already removing `s(causalness_lagged, by = language, k = 10, bs = "cs", m = 1)`. It is not completely ok to remove that, because the anova is marginally significant and the AIC is lower for `model5`. 
 
 So we go back to `model5` and this time in `model7` we remove `s(causalness_lagged, by = language, k = 10, bs = "cs", m = 1)`. It seems that `model5` is our final model, as removing this group-wise smooth is not ok.
+
+
 
 ```{r}
 model6 <- gam(
@@ -1064,7 +1174,11 @@ AIC(model7, model5)
 
 ```
 
+
+
 ## Diagnostics of `model5`
+
+
 
 ```{r}
 # --- 1. Basic GAM checks (smoothness, k-index, residuals) ---
@@ -1075,6 +1189,8 @@ concurvity(model5, full = TRUE)
 
 
 ```
+
+
 The QQ plot of residuals (gam.check) showed that the observed residuals closely followed the expected theoretical quantiles, with only minor deviations in the tails, suggesting that the beta regression model adequately captured the distributional assumptions.
 
 The residuals versus fitted values plot showed that most observations clustered around mid-range fitted values (≈0.5), with some vertical stacking due to repeated predicted values. Residuals were approximately centered around zero without strong systematic trends, suggesting no major violations of model assumptions.
@@ -1088,6 +1204,8 @@ Concurvity checks indicated very high redundancy between the main smooth of caus
 Visualisation of the effect of `causalness_lagged`, `causalness_lagged` by `language` and `causalness_degree` by `language` of `model5` (now renamed `model`).
 
 When plotting the group-wise interaction of `causalness_lagged` we see that Italian and Spanish essentially overlap. It is quite puzzling that the model selection suggested to keep it, as there is clearly no effect. We take it to mean that the real effect is the one of `causalness_lagged` by itself, it is capturing everything important. The group-specific smooths are essentially flat → not adding meaningful information. Statistically, the likelihood test picks up the tiniest difference, but for interpretation and visualization, it’s safe to consider them redundant.
+
+
 
 ```{r}
 model <- model5
@@ -1193,6 +1311,4 @@ p_degree_int
 
 
 ```
-
-
 
