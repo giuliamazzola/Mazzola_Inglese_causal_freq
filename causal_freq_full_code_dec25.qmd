@@ -893,7 +893,7 @@ summary_table %>%
 
 ### Model fit and model selection
 
-Hereby we fit a beta regression model with `mgvc::gam`: *model1* is the maximal model which includes 
+Hereby we fit a beta regression model with `mgvc::gam`: `model1` is the maximal model which includes 
 
 + `s(causalness_degree, k=10), s(causalness_lagged, k=10) and s(period, k=5)`: global smooth terms — these model the overall nonlinear effects of each predictor across all languages.
 
@@ -928,7 +928,7 @@ summary(model1)
 
 * Step 3: Backward selection 
 
-In *model2* we start by removing `s(period, k=5)+`, as it is the term with the highest pvalue. 
+In `model2` we start by removing `s(period, k=5)+`, as it is the term with the highest pvalue. 
  + `anova(..., test="Chisq")` compares two nested GAM models (e.g., model1 and a simpler model2) using a likelihood ratio test (Chi-squared test)
  + `AIC()`: it calculates the AIC of the two models, which is a measure of model fit that balances goodness-of-fit with model complexity (penalizes overfitting)
 
@@ -958,7 +958,7 @@ anova(model1, model2, test="Chisq")
 AIC(model1, model2)
 ```
 
-In *model3* we need to remove `  s(causalness_lagged, by = language, k = 10, bs = "cs", m = 1)`, as it is the term with the highest pvalue. Anova shows it's not ok to remove. 
+In `model3` we need to remove `  s(causalness_lagged, by = language, k = 10, bs = "cs", m = 1)`, as it is the term with the highest pvalue. Anova shows it's not ok to remove. 
 
 ```{r}
 model3 <- gam(
@@ -979,7 +979,7 @@ summary(model3)
 anova(model3, model2, test="Chisq")
 AIC(model3, model2) 
 ```
-We go back to *model2* and in *model4* we remove `s(period, by = language, k = 5, bs = "cs", m= 1)` which is the second next highest p-value. The comparison between *model2* and model4 shows it is ok to remove this term.
+We go back to `model2` and in `model4` we remove `s(period, by = language, k = 5, bs = "cs", m= 1)` which is the second next highest p-value. The comparison between `model2` and model4 shows it is ok to remove this term.
 
 
 ```{r}
@@ -1001,7 +1001,7 @@ anova(model2, model4, test="Chisq")
 AIC(model2, model4)
 
 ```
-In *model5* we need to remove `s(causalness_degree, k=10)`, as it is only marginally significant. Anova shows that removing it does not affect the model. 
+In `model5` we need to remove `s(causalness_degree, k=10)`, as it is only marginally significant. Anova shows that removing it does not affect the model. 
 
 ```{r}
 model5 <- gam(
@@ -1022,9 +1022,9 @@ anova(model4, model5, test="Chisq")
 AIC(model4, model5) 
 
 ```
-The next candidate for removal is `s(causalness_lagged)` in *model6* (as we tried already removing `s(causalness_lagged, by = language, k = 10, bs = "cs", m = 1)`. It is not completely ok to remove that, because the anova is marginally significant and the AIC is lower for *model 5*. 
+The next candidate for removal is `s(causalness_lagged)` in `model6` (as we tried already removing `s(causalness_lagged, by = language, k = 10, bs = "cs", m = 1)`. It is not completely ok to remove that, because the anova is marginally significant and the AIC is lower for `model5`. 
 
-So we go back to *model 5* and this time in *model 7* we remove `s(causalness_lagged, by = language, k = 10, bs = "cs", m = 1)`. It seems that *model5* is our final model, as removing this group-wise smooth is not ok.
+So we go back to `model5` and this time in `model7` we remove `s(causalness_lagged, by = language, k = 10, bs = "cs", m = 1)`. It seems that `model5` is our final model, as removing this group-wise smooth is not ok.
 
 ```{r}
 model6 <- gam(
@@ -1084,7 +1084,7 @@ Concurvity checks indicated very high redundancy between the main smooth of caus
 
 ## Visualise the results `model5`
 
-Visualisation of the effect of `causalness_lagged`, `causalness_lagged` by `language` and `causalness_degree` by `language` of *model5* (now renamed *model*).
+Visualisation of the effect of `causalness_lagged`, `causalness_lagged` by `language` and `causalness_degree` by `language` of `model5` (now renamed `model`).
 
 
 
