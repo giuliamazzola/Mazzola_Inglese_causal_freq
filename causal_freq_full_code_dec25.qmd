@@ -1,10 +1,15 @@
 ---
 title: "Causalness, frequency, diachrony and the causal-noncausal alternation in Italian and Spanish"
-subtitle: "Anonymous resubmission after review to Corpus Linguistics and Linguistic Theory - September 2025"
+subtitle: "Corpus Linguistics and Linguistic Theory - final submission December 2025"
+author:
+  - name: Giulia Mazzola
+    affiliation: Newcastle University
+  - name: Guglielmo Inglese
+    affiliation: Università di Torino
 format:
   html:
     toc: true
-    toc-depth: 3
+    toc-depth: 4
     toc-location: left
 ---
 
@@ -59,7 +64,7 @@ setwd(here::here())
   
 ```
 
-This work is submitted anoyimously together with the homonymous paper to the journal *Corpus Linguistics and Linguistic Theory*. Since it is unpublished work, the authors kindly ask whoever gets to consult these documents to treat them with the highest confidentiality, and to avoid sharing them or showing them to those who are not involved in the review.
+This work is submitted together with the homonymous paper to the journal *Corpus Linguistics and Linguistic Theory* in December 2025.
 
 # Part I: Calculating the causalness degree over time
 
