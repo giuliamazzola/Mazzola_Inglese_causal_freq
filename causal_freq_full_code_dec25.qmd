@@ -1057,7 +1057,7 @@ model7 <- gam(
   method="ML"
 )
 # Summarize the model
-summary(model5) #
+summary(model7) #
 anova(model5, model7, test="Chisq")
 AIC(model7, model5) 
 
@@ -1075,13 +1075,15 @@ concurvity(model5, full = TRUE)
 
 
 ```
-The QQ plot of residuals (gam.check) showed that the observed residuals closely followed the expected theoretical quantiles, with only minor deviations in the tails, suggesting that the beta regression model adequately captured the distributional assumptions.
+The QQ plot of residuals (`gam.check`) showed that the observed residuals closely followed the expected theoretical quantiles, with only minor deviations in the tails, suggesting that the beta regression model adequately captured the distributional assumptions.
 
-The residuals versus fitted values plot showed that most observations clustered around mid-range fitted values (≈0.5), with some vertical stacking due to repeated predicted values. Residuals were approximately centered around zero without strong systematic trends, suggesting no major violations of model assumptions.
+The residuals–fitted plot showed that most observations clustered around mid-range fitted values (≈0.5), with residuals centered near zero and no clear systematic trends, indicating that the mean–variance structure of the beta GAM was generally appropriate. A descending line of points between fitted values of roughly 0–2, running from residuals > 1 down toward 0, suggests that a small subset of observations exhibits a systematic pattern, likely due to extreme fitted values, influential cases, or responses near the boundaries of the beta distribution. This pattern is localized rather than global, and the remainder of the residual cloud displays no indication of model misspecification.
+
+The histogram of residuals indicates that most residuals are tightly clustered around zero, with only a small number of larger positive or negative residuals. Overall, the distribution appears approximately symmetric with light tails, suggesting no major problems with the residual structure or the appropriateness of the beta regression model.
 
 Basis dimension checks (k-index = 0.94–1.03, all p > 0.2) indicated that the chosen number of knots (k = 10) was adequate, with no evidence of undersmoothing.
 
-Concurvity checks indicated very high redundancy between the main smooth of causalness_lagged and its by-language interactions (concurvity ≈ 0.92–1.0). This suggests that the shared and language-specific smooths are not easily separable, likely because the language-specific effects were negligible. This was already noted above. Concurvity among the causalness_degree smooths was low to moderate (≤ 0.56 observed), and therefore not considered problematic.
+Concurvity checks indicated very high redundancy between the main smooth of `causalness_lagged` and its by-language interactions (concurvity ≈ 0.92–1.0). This suggests that the shared and language-specific smooths are not easily separable, likely because the language-specific effects were negligible. Concurvity among the `causalness_degree` smooths was low to moderate (≤ 0.56 observed), and therefore not considered problematic.
 
 ## Visualise the results `model5`
 
